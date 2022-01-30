@@ -1,0 +1,112 @@
+#This creates a variable that will show us the negativity of an agent when a specific set of skills are utilized in the call
+
+calls <- read.csv2("/Users/rohanghosh/Downloads/kpn_erasmus_calls/call_data_pseudonymized_2.csv")
+turn <- read.csv2("/Users/rohanghosh/Downloads/kpn_erasmus_calls/turn_data_pseudonymized_2.csv")
+call<- calls
+
+library(fastDummies)
+library(caret)
+library(dplyr)
+library(tidyr)
+library(mltools)
+library(vctrs)
+library(hms)
+library(data.table)
+library(tidyverse)
+
+#Delete square brackets, apostrophes, and commas (cleaning)
+call$LAST_SKILL_NUM <- gsub("\\[|\\]", "", call$LAST_SKILL_NUM)
+call$LAST_SKILL_NUM <- gsub("'", "", call$LAST_SKILL_NUM)
+call$LAST_SKILL_NUM <- gsub(",", "", call$LAST_SKILL_NUM)
+
+#Split individual skills into seperate columns using regular expression 
+call<-separate(call, LAST_SKILL_NUM, into = c('Skill1', 'Skill2'), sep = " (?=[^ ]+$)")
+factor(call$Skill1)
+factor(call$Skill2)
+
+#number of missing skill 2 value (how many calls only required one skill), missing values because when splitting there are sometimes only one skill
+sum(is.na(call$Skill2))
+
+#rename missing values
+call$Skill2[is.na(call$Skill2)] <- "No_Skill" 
+
+#filter only agent data for turn dataset
+turn_agent<-filter(turn, Person == "agent")
+#use this to merge
+merger<- call[c('Skill1', 'Skill2', 'GENESYS_CONVERSATION_ID')]
+merger_df<- dplyr::full_join(turn_agent, merger)
+unique(merger$Skill2)
+
+#one hot encode both variables after merge
+final_df <- dummy_cols(merger_df, 
+                 select_columns = c('Skill1', 'Skill2', 'Emotion'))
+
+
+#Assign Importance for skills (Need to decide on weights which is hard without natural language definitions of skills) (most frequent first skill is a 1, assuming most CRMs need the skill), (-1 is less frequent thus a higher weight as for all skill2s)
+final_df['Skill1_18f26f88-a791-4055-a811-59414b6b21e7']<-ifelse(final_df$Skill1=='18f26f88-a791-4055-a811-59414b6b21e7', 1, 0)
+final_df['Skill1_-1']<-ifelse(final_df$Skill1=='-1', 2, 0)
+final_df['Skill2_24ff1fae-7594-49df-8f3e-fdfd8ecfc59d']<-ifelse(final_df$Skill2=='24ff1fae-7594-49df-8f3e-fdfd8ecfc59d', 2, 0)
+final_df['Skill2_fdcad9c9-fd2f-45b8-94e2-91371247d201']<-ifelse(final_df$Skill2=='fdcad9c9-fd2f-45b8-94e2-91371247d201', 2, 0)
+final_df['Skill2_6fb9aa96-7542-4cd1-b90e-438445f12027']<-ifelse(final_df$Skill2=='6fb9aa96-7542-4cd1-b90e-438445f12027', 2, 0)
+final_df['Skill2_048c2d60-38db-4e2b-9cc9-67e2c15f8e5f']<-ifelse(final_df$Skill2=='048c2d60-38db-4e2b-9cc9-67e2c15f8e5f', 2, 0)
+final_df['Skill2_cb499461-0532-4a74-998f-ea34b87a539c']<-ifelse(final_df$Skill2=='cb499461-0532-4a74-998f-ea34b87a539c', 2, 0)
+final_df['Skill2_73613ec3-e7e1-46f4-89a9-c1d74d1a54ca']<-ifelse(final_df$Skill2=='73613ec3-e7e1-46f4-89a9-c1d74d1a54ca', 2, 0)
+final_df['Skill2_80cbcf8a-1041-42e1-9210-644dbf69eb75']<-ifelse(final_df$Skill2=='80cbcf8a-1041-42e1-9210-644dbf69eb75', 2, 0)
+final_df['Skill2_b1629396-1dcb-4df0-ad81-7d9d4394534e']<-ifelse(final_df$Skill2=='b1629396-1dcb-4df0-ad81-7d9d4394534e', 2, 0)
+final_df['Skill2_0bb1c7e7-1b8a-4b0d-8b7b-58dfe89e5f04']<-ifelse(final_df$Skill2=='0bb1c7e7-1b8a-4b0d-8b7b-58dfe89e5f04', 2, 0)
+final_df['Skill2_63826688-93b0-4da0-b585-5f30bf7a79ba']<-ifelse(final_df$Skill2=='63826688-93b0-4da0-b585-5f30bf7a79ba', 2, 0)
+final_df['Skill2_785750af-7e2d-4f2d-b058-beed69608556']<-ifelse(final_df$Skill2=='785750af-7e2d-4f2d-b058-beed69608556', 2, 0)
+final_df['Skill2_6172f317-ea56-4277-aa97-1998d69f6bd9']<-ifelse(final_df$Skill2=='6172f317-ea56-4277-aa97-1998d69f6bd9', 2, 0)
+final_df['Skill2_b3d69698-0fa5-475d-aaaa-52cca34fee0d']<-ifelse(final_df$Skill2=='b3d69698-0fa5-475d-aaaa-52cca34fee0d', 2, 0)
+final_df['Skill2_eaa52890-7c52-4c27-9e88-b04b2cb96fca']<-ifelse(final_df$Skill2=='eaa52890-7c52-4c27-9e88-b04b2cb96fca', 2, 0)
+final_df['Skill2_0363fbf8-7e2d-4769-b2d7-734139208298']<-ifelse(final_df$Skill2=='0363fbf8-7e2d-4769-b2d7-734139208298', 2, 0)
+final_df['Skill2_7397c59f-b335-4b0e-8822-629de75107bb']<-ifelse(final_df$Skill2=='7397c59f-b335-4b0e-8822-629de75107bb', 2, 0)
+final_df['Skill2_abdbb1ac-1741-4fc3-b5f1-27cd0d7b6613']<-ifelse(final_df$Skill2=='abdbb1ac-1741-4fc3-b5f1-27cd0d7b6613', 2, 0)
+final_df['Skill2_0edf6f57-ecc1-49d9-bfd2-6cb2364749a4']<-ifelse(final_df$Skill2=='0edf6f57-ecc1-49d9-bfd2-6cb2364749a4', 2, 0)
+final_df$No_Skill<-ifelse(final_df$Skill2=='No_Skill', 0, 0)
+
+#Assign Importance to Emotion
+final_df$Emotion_angry    <-ifelse(final_df$Emotion_angry   ==1, 2, 0)
+final_df$Emotion_fear    <-ifelse(final_df$Emotion_fear   ==1, 2, 0)
+final_df$Emotion_happy    <-ifelse(final_df$Emotion_happy   ==1, -1, 0)
+final_df$Emotion_sad    <-ifelse(final_df$Emotion_sad   ==1, 1, 0)
+final_df$Emotion_nvt   <-ifelse(final_df$Emotion_nvt   ==1, 0, 0)
+
+#reset (delete after)
+f<-final_df
+final_df<-f
+table(final_df['w_Skill1_18f26f88-a791-4055-a811-59414b6b21e7'])
+
+#Assign Score for each skill
+final_df['w_Skill1_18f26f88-a791-4055-a811-59414b6b21e7']<-final_df['Skill1_18f26f88-a791-4055-a811-59414b6b21e7']*final_df$Emotion_angry +final_df['Skill1_18f26f88-a791-4055-a811-59414b6b21e7']*final_df$Emotion_fear +final_df['Skill1_18f26f88-a791-4055-a811-59414b6b21e7']*final_df$Emotion_happy+final_df['Skill1_18f26f88-a791-4055-a811-59414b6b21e7']*final_df$Emotion_sad
+final_df['w_Skill1_-1']<-final_df['Skill1_-1']*final_df$Emotion_angry +final_df['Skill1_-1']*final_df$Emotion_fear +final_df['Skill1_-1']*final_df$Emotion_happy+final_df['Skill1_-1']*final_df$Emotion_sad
+final_df['w_Skill2_24ff1fae-7594-49df-8f3e-fdfd8ecfc59d']<-final_df['Skill2_24ff1fae-7594-49df-8f3e-fdfd8ecfc59d']*final_df$Emotion_angry +final_df['Skill2_24ff1fae-7594-49df-8f3e-fdfd8ecfc59d']*final_df$Emotion_fear +final_df['Skill2_24ff1fae-7594-49df-8f3e-fdfd8ecfc59d']*final_df$Emotion_happy+final_df['Skill2_24ff1fae-7594-49df-8f3e-fdfd8ecfc59d']*final_df$Emotion_sad
+final_df['w_Skill2_fdcad9c9-fd2f-45b8-94e2-91371247d201']<-final_df['Skill2_fdcad9c9-fd2f-45b8-94e2-91371247d201']*final_df$Emotion_angry +final_df['Skill2_fdcad9c9-fd2f-45b8-94e2-91371247d201']*final_df$Emotion_fear +final_df['Skill2_fdcad9c9-fd2f-45b8-94e2-91371247d201']*final_df$Emotion_happy+final_df['Skill2_fdcad9c9-fd2f-45b8-94e2-91371247d201']*final_df$Emotion_sad
+final_df['w_Skill2_6fb9aa96-7542-4cd1-b90e-438445f12027']<-final_df['Skill2_6fb9aa96-7542-4cd1-b90e-438445f12027']*final_df$Emotion_angry +final_df['Skill2_6fb9aa96-7542-4cd1-b90e-438445f12027']*final_df$Emotion_fear +final_df['Skill2_6fb9aa96-7542-4cd1-b90e-438445f12027']*final_df$Emotion_happy+final_df['Skill2_6fb9aa96-7542-4cd1-b90e-438445f12027']*final_df$Emotion_sad
+final_df['w_Skill2_048c2d60-38db-4e2b-9cc9-67e2c15f8e5f']<-final_df['Skill2_048c2d60-38db-4e2b-9cc9-67e2c15f8e5f']*final_df$Emotion_angry +final_df['Skill2_048c2d60-38db-4e2b-9cc9-67e2c15f8e5f']*final_df$Emotion_fear +final_df['Skill2_048c2d60-38db-4e2b-9cc9-67e2c15f8e5f']*final_df$Emotion_happy+final_df['Skill2_048c2d60-38db-4e2b-9cc9-67e2c15f8e5f']*final_df$Emotion_sad
+final_df['w_Skill2_cb499461-0532-4a74-998f-ea34b87a539c']<-final_df['Skill2_cb499461-0532-4a74-998f-ea34b87a539c']*final_df$Emotion_angry +final_df['Skill2_cb499461-0532-4a74-998f-ea34b87a539c']*final_df$Emotion_fear +final_df['Skill2_cb499461-0532-4a74-998f-ea34b87a539c']*final_df$Emotion_happy+final_df['Skill2_cb499461-0532-4a74-998f-ea34b87a539c']*final_df$Emotion_sad
+final_df['w_Skill2_73613ec3-e7e1-46f4-89a9-c1d74d1a54ca']<-final_df['Skill2_73613ec3-e7e1-46f4-89a9-c1d74d1a54ca']*final_df$Emotion_angry +final_df['Skill2_73613ec3-e7e1-46f4-89a9-c1d74d1a54ca']*final_df$Emotion_fear +final_df['Skill2_73613ec3-e7e1-46f4-89a9-c1d74d1a54ca']*final_df$Emotion_happy+final_df['Skill2_73613ec3-e7e1-46f4-89a9-c1d74d1a54ca']*final_df$Emotion_sad
+final_df['w_Skill2_80cbcf8a-1041-42e1-9210-644dbf69eb75']<-final_df['Skill2_80cbcf8a-1041-42e1-9210-644dbf69eb75']*final_df$Emotion_angry +final_df['Skill2_80cbcf8a-1041-42e1-9210-644dbf69eb75']*final_df$Emotion_fear +final_df['Skill2_80cbcf8a-1041-42e1-9210-644dbf69eb75']*final_df$Emotion_happy+final_df['Skill2_80cbcf8a-1041-42e1-9210-644dbf69eb75']*final_df$Emotion_sad
+final_df['w_Skill2_b1629396-1dcb-4df0-ad81-7d9d4394534e']<-final_df['Skill2_b1629396-1dcb-4df0-ad81-7d9d4394534e']*final_df$Emotion_angry +final_df['Skill2_b1629396-1dcb-4df0-ad81-7d9d4394534e']*final_df$Emotion_fear +final_df['Skill2_b1629396-1dcb-4df0-ad81-7d9d4394534e']*final_df$Emotion_happy+final_df['Skill2_b1629396-1dcb-4df0-ad81-7d9d4394534e']*final_df$Emotion_sad
+final_df['w_Skill2_0bb1c7e7-1b8a-4b0d-8b7b-58dfe89e5f04']<-final_df['Skill2_0bb1c7e7-1b8a-4b0d-8b7b-58dfe89e5f04']*final_df$Emotion_angry +final_df['Skill2_0bb1c7e7-1b8a-4b0d-8b7b-58dfe89e5f04']*final_df$Emotion_fear +final_df['Skill2_0bb1c7e7-1b8a-4b0d-8b7b-58dfe89e5f04']*final_df$Emotion_happy+final_df['Skill2_0bb1c7e7-1b8a-4b0d-8b7b-58dfe89e5f04']*final_df$Emotion_sad
+final_df['w_Skill2_63826688-93b0-4da0-b585-5f30bf7a79ba']<-final_df['Skill2_63826688-93b0-4da0-b585-5f30bf7a79ba']*final_df$Emotion_angry +final_df['Skill2_63826688-93b0-4da0-b585-5f30bf7a79ba']*final_df$Emotion_fear +final_df['Skill2_63826688-93b0-4da0-b585-5f30bf7a79ba']*final_df$Emotion_happy+final_df['Skill2_63826688-93b0-4da0-b585-5f30bf7a79ba']*final_df$Emotion_sad
+final_df['w_Skill2_785750af-7e2d-4f2d-b058-beed69608556']<-final_df['Skill2_785750af-7e2d-4f2d-b058-beed69608556']*final_df$Emotion_angry +final_df['Skill2_785750af-7e2d-4f2d-b058-beed69608556']*final_df$Emotion_fear +final_df['Skill2_785750af-7e2d-4f2d-b058-beed69608556']*final_df$Emotion_happy+final_df['Skill2_785750af-7e2d-4f2d-b058-beed69608556']*final_df$Emotion_sad
+final_df['w_Skill2_6172f317-ea56-4277-aa97-1998d69f6bd9']<-final_df['Skill2_6172f317-ea56-4277-aa97-1998d69f6bd9']*final_df$Emotion_angry +final_df['Skill2_6172f317-ea56-4277-aa97-1998d69f6bd9']*final_df$Emotion_fear +final_df['Skill2_6172f317-ea56-4277-aa97-1998d69f6bd9']*final_df$Emotion_happy+final_df['Skill2_6172f317-ea56-4277-aa97-1998d69f6bd9']*final_df$Emotion_sad
+final_df['w_Skill2_b3d69698-0fa5-475d-aaaa-52cca34fee0d']<-final_df['Skill2_b3d69698-0fa5-475d-aaaa-52cca34fee0d']*final_df$Emotion_angry +final_df['Skill2_b3d69698-0fa5-475d-aaaa-52cca34fee0d']*final_df$Emotion_fear +final_df['Skill2_b3d69698-0fa5-475d-aaaa-52cca34fee0d']*final_df$Emotion_happy+final_df['Skill2_b3d69698-0fa5-475d-aaaa-52cca34fee0d']*final_df$Emotion_sad
+final_df['w_Skill2_eaa52890-7c52-4c27-9e88-b04b2cb96fca']<-final_df['Skill2_eaa52890-7c52-4c27-9e88-b04b2cb96fca']*final_df$Emotion_angry +final_df['Skill2_eaa52890-7c52-4c27-9e88-b04b2cb96fca']*final_df$Emotion_fear +final_df['Skill2_eaa52890-7c52-4c27-9e88-b04b2cb96fca']*final_df$Emotion_happy+final_df['Skill2_eaa52890-7c52-4c27-9e88-b04b2cb96fca']*final_df$Emotion_sad
+final_df['w_Skill2_0363fbf8-7e2d-4769-b2d7-734139208298']<-final_df['Skill2_0363fbf8-7e2d-4769-b2d7-734139208298']*final_df$Emotion_angry +final_df['Skill2_0363fbf8-7e2d-4769-b2d7-734139208298']*final_df$Emotion_fear +final_df['Skill2_0363fbf8-7e2d-4769-b2d7-734139208298']*final_df$Emotion_happy+final_df['Skill2_0363fbf8-7e2d-4769-b2d7-734139208298']*final_df$Emotion_sad
+final_df['w_Skill2_7397c59f-b335-4b0e-8822-629de75107bb']<-final_df['Skill2_7397c59f-b335-4b0e-8822-629de75107bb']*final_df$Emotion_angry +final_df['Skill2_7397c59f-b335-4b0e-8822-629de75107bb']*final_df$Emotion_fear +final_df['Skill2_7397c59f-b335-4b0e-8822-629de75107bb']*final_df$Emotion_happy+final_df['Skill2_7397c59f-b335-4b0e-8822-629de75107bb']*final_df$Emotion_sad
+final_df['w_Skill2_abdbb1ac-1741-4fc3-b5f1-27cd0d7b6613']<-final_df['Skill2_abdbb1ac-1741-4fc3-b5f1-27cd0d7b6613']*final_df$Emotion_angry +final_df['Skill2_abdbb1ac-1741-4fc3-b5f1-27cd0d7b6613']*final_df$Emotion_fear +final_df['Skill2_abdbb1ac-1741-4fc3-b5f1-27cd0d7b6613']*final_df$Emotion_happy+final_df['Skill2_abdbb1ac-1741-4fc3-b5f1-27cd0d7b6613']*final_df$Emotion_sad
+final_df['w_Skill2_0edf6f57-ecc1-49d9-bfd2-6cb2364749a4']<-final_df['Skill2_0edf6f57-ecc1-49d9-bfd2-6cb2364749a4']*final_df$Emotion_angry +final_df['Skill2_0edf6f57-ecc1-49d9-bfd2-6cb2364749a4']*final_df$Emotion_fear +final_df['Skill2_0edf6f57-ecc1-49d9-bfd2-6cb2364749a4']*final_df$Emotion_happy+final_df['Skill2_0edf6f57-ecc1-49d9-bfd2-6cb2364749a4']*final_df$Emotion_sad
+final_df$w_No_Skill<-final_df$No_Skill*final_df$Emotion_angry +final_df$No_Skill*final_df$Emotion_fear +final_df$No_Skill*final_df$Emotion_happy+final_df$No_Skill*final_df$Emotion_sad
+
+#Putting it together, weighting skills and the emotions used when different sets of skills are used
+final_df$skill_index<- rowSums(final_df[,c(37:57)])
+groups2<-final_df%>%group_by(GENESYS_CONVERSATION_ID)%>%summarise(Skill_Emotion=sum(skill_index))
+
+#merge Skill_Emotion to call dataset table
+call2=merge(x=call,y=groups2,by="GENESYS_CONVERSATION_ID")
+
+#If more skills are included the negativity rate will be more negative/positive than if only 1 skill is used, 
+#This will show us how the emotions differ when a specific set of skills are used
+
